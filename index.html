@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Watchlist — 60 titles for one specific taste</title>
+<style>
+  :root{
+    --bg:#0a0b0e; --bg2:#101218; --panel:#151823; --panel2:#1b1f2c;
+    --line:#262b3a; --text:#ece9e3; --dim:#9aa0b0; --faint:#6b7280;
+    --accent:#e5484d; --gold:#e0b457; --green:#5bbf8a; --blue:#6aa8ff;
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; background:
+      radial-gradient(1100px 600px at 12% -10%, #1d1620 0%, transparent 55%),
+      radial-gradient(900px 500px at 100% 0%, #101a22 0%, transparent 50%),
+      var(--bg);
+    color:var(--text);
+    font:15px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit}
+  header{
+    position:sticky; top:0; z-index:40;
+    backdrop-filter:blur(14px);
+    background:linear-gradient(180deg,rgba(10,11,14,.94),rgba(10,11,14,.82));
+    border-bottom:1px solid var(--line);
+  }
+  .wrap{max-width:1320px; margin:0 auto; padding:0 20px}
+  .masthead{display:flex; align-items:flex-end; justify-content:space-between; gap:20px; padding:18px 0 12px}
+  .brand h1{
+    font:600 26px/1.1 ui-serif,Georgia,"Times New Roman",serif;
+    letter-spacing:.2px; margin:0;
+  }
+  .brand h1 span{color:var(--accent)}
+  .brand p{margin:4px 0 0; color:var(--dim); font-size:12.5px}
+  .stats{display:flex; gap:18px; text-align:right; flex-shrink:0}
+  .stat b{display:block; font-size:19px; line-height:1.1; font-variant-numeric:tabular-nums}
+  .stat span{font-size:10.5px; text-transform:uppercase; letter-spacing:.12em; color:var(--faint)}
+  .controls{display:flex; flex-wrap:wrap; gap:10px; align-items:center; padding:0 0 14px}
+  .search{position:relative; flex:1 1 260px; min-width:200px}
+  .search input{
+    width:100%; padding:10px 12px 10px 34px; border-radius:10px;
+    background:var(--panel); border:1px solid var(--line); color:var(--text);
+    outline:none; font-size:14px;
+  }
+  .search input:focus{border-color:#3a4257; background:var(--panel2)}
+  .search svg{position:absolute; left:11px; top:50%; transform:translateY(-50%); opacity:.5}
+  select{
+    appearance:none; background:var(--panel); color:var(--text); border:1px solid var(--line);
+    border-radius:10px; padding:10px 32px 10px 12px; font-size:13px; cursor:pointer;
+    background-image:linear-gradient(45deg,transparent 50%,var(--dim) 50%),linear-gradient(135deg,var(--dim) 50%,transparent 50%);
+    background-position:calc(100% - 17px) 52%,calc(100% - 12px) 52%;
+    background-size:5px 5px,5px 5px; background-repeat:no-repeat;
+  }
+  .tabs{display:flex; gap:6px; padding:2px; background:var(--panel); border:1px solid var(--line); border-radius:11px}
+  .tabs button{
+    border:0; background:transparent; color:var(--dim); padding:7px 12px; border-radius:8px;
+    font-size:12.5px; font-weight:600; cursor:pointer; letter-spacing:.02em;
+  }
+  .tabs button:hover{color:var(--text)}
+  .tabs button[aria-selected="true"]{background:var(--panel2); color:var(--text); box-shadow:0 1px 0 rgba(255,255,255,.04) inset}
+  .chips{display:flex; gap:6px; flex-wrap:wrap}
+  .chip{
+    border:1px solid var(--line); background:var(--panel); color:var(--dim);
+    border-radius:999px; padding:6px 11px; font-size:12px; cursor:pointer;
+  }
+  .chip:hover{color:var(--text); border-color:#3a4257}
+  .chip[aria-pressed="true"]{background:#2a2016; border-color:#5a4423; color:var(--gold)}
+  .resultbar{display:flex; justify-content:space-between; align-items:center; gap:12px; padding:0 0 10px; color:var(--faint); font-size:12px}
+  .resultbar button{background:none;border:0;color:var(--blue);cursor:pointer;font-size:12px}
+  main{padding:18px 0 70px}
+  .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(166px,1fr)); gap:16px}
+  @media(min-width:900px){ .grid{grid-template-columns:repeat(auto-fill,minmax(182px,1fr)); gap:18px} }
+  .card{
+    background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+    overflow:hidden; cursor:pointer; position:relative;
+    transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+    text-align:left; padding:0; color:inherit; font:inherit;
+  }
+  .card:hover{transform:translateY(-3px); border-color:#39415a; box-shadow:0 14px 30px -12px rgba(0,0,0,.8)}
+  .card:focus-visible{outline:2px solid var(--blue); outline-offset:2px}
+  .thumb{aspect-ratio:2/3; position:relative; background:linear-gradient(145deg,#20242f,#12141b); overflow:hidden}
+  .thumb img{width:100%; height:100%; object-fit:cover; display:block}
+  .thumb .ph{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; padding:18px; text-align:center; font:600 15px/1.3 ui-serif,Georgia,serif; color:#aab2c5}
+  .badge-type{
+    position:absolute; top:8px; left:8px; padding:3px 7px; border-radius:6px;
+    background:rgba(8,9,12,.82); border:1px solid rgba(255,255,255,.14);
+    font-size:9.5px; letter-spacing:.09em; text-transform:uppercase; font-weight:700; color:#cfd4e0;
+    backdrop-filter:blur(4px);
+  }
+  .badge-score{
+    position:absolute; right:8px; top:8px; background:rgba(8,9,12,.86); border:1px solid rgba(224,180,87,.35);
+    color:var(--gold); font-size:11px; font-weight:700; padding:3px 7px; border-radius:6px;
+    font-variant-numeric:tabular-nums;
+  }
+  .card-body{padding:9px 10px 11px}
+  .card-title{font-size:13px; font-weight:650; line-height:1.3; margin:0 0 2px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; text-transform:none; letter-spacing:0}
+  .card-sub{font-size:11px; color:var(--faint); margin-bottom:6px}
+  .mini{display:flex; gap:5px; flex-wrap:wrap}
+  .pill{font-size:9.5px; padding:2px 5px; border-radius:4px; background:#1d2130; color:#aab2c5; border:1px solid #2a3042; font-variant-numeric:tabular-nums}
+  .pill.imdb{border-color:#3d3417; color:var(--gold); background:#221d12}
+  .pill.rt{border-color:#4a2326; color:#f08a8e; background:#241518}
+  .empty{padding:70px 10px; text-align:center; color:var(--faint)}
+  footer{border-top:1px solid var(--line); padding:22px 0 40px; color:var(--faint); font-size:11.5px}
+  footer b{color:var(--dim); font-weight:600}
+
+  /* modal */
+  .overlay{
+    position:fixed; inset:0; z-index:100; display:none; align-items:center; justify-content:center;
+    padding:24px; background:rgba(4,5,8,.78); backdrop-filter:blur(6px);
+  }
+  .overlay.open{display:flex}
+  .sheet{
+    width:min(960px,100%); max-height:90vh; overflow:auto; background:var(--bg2);
+    border:1px solid #2e3446; border-radius:18px; position:relative;
+    box-shadow:0 40px 100px -20px #000;
+    animation:pop .22s ease;
+  }
+  @keyframes pop{from{opacity:0;transform:translateY(10px) scale(.99)}to{opacity:1;transform:none}}
+  .sheet-close{
+    position:absolute; top:12px; right:12px; z-index:2; width:34px; height:34px; border-radius:50%;
+    border:1px solid #333a4d; background:rgba(12,14,19,.9); color:#cbd1de; font-size:18px; cursor:pointer;
+  }
+  .sheet-close:hover{background:#202532}
+  .sheet-grid{display:grid; grid-template-columns:280px 1fr; gap:0}
+  @media(max-width:720px){ .sheet-grid{grid-template-columns:1fr} .sheet-poster{max-height:340px} }
+  .sheet-poster{background:#0c0e13; position:relative; min-height:300px}
+  .sheet-poster img{width:100%; height:100%; object-fit:cover; display:block; border-radius:17px 0 0 17px}
+  @media(max-width:720px){ .sheet-poster img{border-radius:17px 17px 0 0} }
+  .sheet-body{padding:26px 26px 30px}
+  .kicker{font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--faint); margin-bottom:8px}
+  .sheet-body h2{font:600 28px/1.15 ui-serif,Georgia,serif; margin:0 0 6px; letter-spacing:.1px}
+  .meta{color:var(--dim); font-size:12.5px; margin-bottom:14px}
+  .scores{display:flex; gap:8px; flex-wrap:wrap; margin:0 0 18px}
+  .score{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:8px 11px; min-width:86px}
+  .score .v{font-size:18px; font-weight:700; line-height:1.1; font-variant-numeric:tabular-nums}
+  .score .l{font-size:9.5px; text-transform:uppercase; letter-spacing:.1em; color:var(--faint); margin-top:2px}
+  .score.imdb .v{color:var(--gold)} .score.rt .v{color:#f08a8e} .score.tfp .v{color:#8fc7ff}
+  .genres{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px}
+  .genre{font-size:10.5px; padding:3px 8px; border-radius:999px; border:1px solid #2c3244; color:#b7bdcc}
+  h3{font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--faint); margin:18px 0 6px}
+  .plot{font-size:14px; color:#d8d5cf; margin:0}
+  .why{font-size:13.5px; color:#cfe0d6; margin:0; padding-left:11px; border-left:2px solid #2f5443}
+  .notes{font-size:13px; color:#e0c8b3; margin:0; padding:10px 12px; background:#1b1512; border:1px solid #3a2a1e; border-radius:9px}
+  .links{display:flex; gap:9px; flex-wrap:wrap; margin-top:22px}
+  .btn{
+    display:inline-flex; align-items:center; gap:7px; padding:9px 14px; border-radius:9px;
+    border:1px solid var(--line); background:var(--panel); color:var(--text); text-decoration:none; font-size:12.5px; font-weight:600;
+  }
+  .btn:hover{background:var(--panel2); border-color:#3a4257}
+  .btn.primary{background:#2a1214; border-color:#5a2529; color:#f2a2a6}
+  .btn.primary:hover{background:#35171a}
+  .tfpnote{font-size:10.5px; color:var(--faint); margin-top:14px}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="masthead">
+      <div class="brand">
+        <h1>The <span>Watchlist</span></h1>
+        <p>60 films, series and animation picked for crime, sci-fi, dark fantasy and power-progression — Aug 2023 to now, plus the catalog that earned it.</p>
+      </div>
+      <div class="stats">
+        <div class="stat"><b id="statTotal">60</b><span>titles</span></div>
+        <div class="stat"><b id="statImdb">8.4</b><span>avg IMDb</span></div>
+        <div class="stat"><b id="statRt">41</b><span>with RT</span></div>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="search">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="q" type="search" placeholder="Search title, genre, keyword…" autocomplete="off">
+      </div>
+      <div class="tabs" role="tablist" aria-label="Type">
+        <button role="tab" data-cat="all" aria-selected="true">All</button>
+        <button role="tab" data-cat="movie" aria-selected="false">Movies</button>
+        <button role="tab" data-cat="series" aria-selected="false">Series</button>
+        <button role="tab" data-cat="anime" aria-selected="false">Anime</button>
+        <button role="tab" data-cat="anim" aria-selected="false">Animation</button>
+      </div>
+      <select id="genre" aria-label="Genre"><option value="all">All genres</option></select>
+      <select id="sort" aria-label="Sort">
+        <option value="imdb">Sort: IMDb</option>
+        <option value="rt">Sort: RT critics</option>
+        <option value="aud">Sort: RT audience</option>
+        <option value="year">Sort: Newest</option>
+        <option value="title">Sort: A–Z</option>
+      </select>
+      <div class="chips" id="tiers" aria-label="Minimum IMDb">
+        <button class="chip" data-tier="all" aria-pressed="true">All</button>
+        <button class="chip" data-tier="8.5" aria-pressed="false">8.5+</button>
+        <button class="chip" data-tier="8" aria-pressed="false">8.0+</button>
+        <button class="chip" data-tier="7.5" aria-pressed="false">7.5+</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="resultbar"><span id="count"></span><button id="reset" hidden>Reset filters</button></div>
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="empty" hidden>Nothing matches. Loosen a filter.</div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <b>Ratings:</b> IMDb via OMDb · Rotten Tomatoes scraped from rottentomatoes.com · “TFP” is the upload index’s own posted score, shown for reference only and often stale. No download links are included. Poster art © respective studios.
+  </div>
+</footer>
+
+<div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+  <div class="sheet" id="sheet"></div>
+</div>
+
+<script id="catalog" type="application/json">[{"id":"tt26548265","cat":"movie","catLabel":"Movie","title":"Maharaja","year":"2024","rated":"N/A","runtime":"141 min","genres":["Action","Crime","Drama"],"imdb":8.3,"votes":"86,179","rtCrit":83,"rtAud":94,"tfp":null,"poster":"https://m.media-amazon.com/images/M/MV5BOTFlMTIxOGItZTk0Zi00MTk2LWJiM2UtMzlhZWYzNjQ4N2Y3XkEyXkFqcGc@._V1_QL75_UY562_CR21,0,380,562_.jpg","plot":"A simple and soft spoken barber in a small town reports the theft of Lakshmi ( his dustbin) to the police. Initially they are angry and amused and take it lightly but when he keeps insisting they start an investigation which throws up a number of suspects.","seasons":null,"country":"India","tier":"8.0–8.4","why":"Nonlinear revenge puzzle; mastermind reveal, no filler.","notes":"Graphic revenge violence, blood, sexual-assault backstory.","imdbUrl":"https://www.imdb.com/title/tt26548265/","rtUrl":"https://www.rottentomatoes.com/m/maharaja_2024"},{"id":"tt33764258","cat":"movie","catLabel":"Movie","title":"The Odyssey","year":"2026","rated":"R","runtime":"172 min","genres":["Action","Adventure","Drama"],"imdb":8.4,"votes":"544,815","rtCrit":94,"rtAud":96,"tfp":8.4,"poster":"https://m.media-amazon.com/images/M/MV5BNTcyNmJlZmQtNDUwYy00NDBjLTg1NGQtYTY2Y2UxMWM3NmI1XkEyXkFqcGc@._V1_QL75_UX380_CR0,0,380,562_.jpg","plot":"After the Trojan War, Odysseus faces a dangerous voyage back to Ithaca, meeting creatures like the Cyclops Polyphemus, Sirens, and Calypso along the way.","seasons":null,"country":"United Kingdom, United States, Canada, New Zealand, Iceland","tier":"8.0–8.4","why":"Mythic war epic from the director of Oppenheimer.","notes":"R. Battle violence, peril, mythic horror imagery.","imdbUrl":"https://www.imdb.com/title/tt33764258/","rtUrl":"https://www.rottentomatoes.com/m/the_odyssey_2026"},{"id":"tt15239678","cat":"movie","catLabel":"Movie","title":"Dune: Part Two","year":"2024","rated":"PG-13","runtime":"166 min","genres":["Action","Adventure","Drama"],"imdb":8.4,"votes":"797,737","rtCrit":92,"rtAud":95,"tfp":null,"poster":"https://m.media-amazon.com/images/M/MV5BNTc0YmQxMjEtODI5MC00NjFiLTlkMWUtOGQ5NjFmYWUyZGJhXkEyXkFqcGc@._V1_QL75_UX380_CR0,0,380,562_.jpg","plot":"Paul Atreides unites with Chani and the Fremen while on a warpath of revenge against the conspirators who destroyed his family. Facing a choice between the love of his life and the fate of the known universe, he endeavors to prevent a terrible future only he can foresee.","seasons":null,"country":"United States, Canada, United Arab Emirates, Hungary, Italy, New Zealand, Jordan","tier":"8.0–8.4","why":"Hard sci-fi power politics at blockbuster scale.","notes":"PG-13. Large-scale warfare, some disturbing imagery.","imdbUrl":"https://www.imdb.com/title/tt15239678/","rtUrl":"https://www.rottentomatoes.com/m/dune_part_two"},{"id":"tt12042730","cat":"movie","catLabel":"Movie","title":"Project Hail Mary","year":"2026","rated":"PG-13","runtime":"156 min","genres":["Adventure","Comedy","Sci-Fi"],"imdb":8.2,"votes":"600,141","rtCrit":95,"rtAud":95,"tfp":6.5,"poster":"https://m.media-amazon.com/images/M/MV5BNTkwNzJiYTctNzI3NC00NjE1LTlhYjktY2Q5MTdmMWFmNzcxXkEyXkFqcGc@._V1_QL75_UX380_CR0,0,380,562_.jpg","plot":"Middle school science teacher Ryland Grace (Ryan Gosling) wakes up on a spaceship light-years from home with no recollection of who he is or how he got there. As his memory returns, he begins to uncover his mission: to solve the riddle of the mysterious substance that is causing the sun to die out.","seasons":null,"country":"United States","tier":"8.0–8.4","why":"Problem-solving sci-fi with one great friendship.","notes":"PG-13. Peril, mild language, comedic tone.","imdbUrl":"https://www.imdb.com/title/tt12042730/","rtUrl":"https://www.rottentomatoes.com/m/project_hail_mary"},{"id":"tt27302079","cat":"movie","catLabel":"Movie","title":"Aattam","year":"2023","rated":"N/A","runtime":"139 min","genres":["Drama","Mystery","Thriller"],"imdb":8.2,"votes":"3,945","rtCrit":100,"rtAud":96,"tfp":null,"poster":"https://m.media-amazon.com/images/M/MV5BYTczNGRiMjQtYTM5NS00ZjEyLWEwY2MtMzE4YjdjNjYxYzcxXkEyXkFqcGc@._V1_SX300.jpg","plot":"After a party amongst a theatre group, their sole actress, Anjali is subjected to a crime from one of the men in the group. A meeting is called for. In trying to reach a consensus, stories unravel, suspicions surface and clamour e...","seasons":null,"country":"India","tier":"8.0–8.4","why":"Twisty, talky morality thriller; zero filler.","notes":"Sexual-assault accusation, talk-driven; little on-screen violence.","imdbUrl":"https://www.imdb.com/title/tt27302079/","rtUrl":"https://www.rottentomatoes.com/m/aattam_2023"},{"id":"tt26439764","cat":"movie","catLabel":"Movie","title":"Kantara: A Legend - Chapter 1","year":"2025","rated":"Not Rated","runtime":"165 min","genres":["Action","Adventure","Drama"],"imdb":8.1,"votes":"59,616","rtCrit":85,"rtAud":92,"tfp":null,"poster":"https://m.media-amazon.com/images/M/MV5BNDU2ZTYxYTMtMjhlZC00ZjEwLThhNDUtMzdlNWM4ZDcyYTM1XkEyXkFqcGc@._V1_QL75_UY562_CR35,0,380,562_.jpg","plot":"Set against the era of the Kadamba dynasty, Kantara: Chapter 1 explores the origins of the sacred traditions of Bhoothakola, tracing the divine emergence of Panjurli Daiva and Guliga Daiva.","seasons":null,"country":"India","tier":"8.0–8.4","why":"Mythic action rooted in folk ritual.","notes":"Ritual violence, blood, supernatural imagery.","imdbUrl":"https://www.imdb.com/title/tt26439764/","rtUrl":"https://www.rottentomatoes.com/m/kantara_a_legend_chapter_1"},{"id":"tt15980138","cat":"movie","catLabel":"Movie","title":"Kishkindha Kaandam","year":"2024","rated":"N/A","runtime":"133 min","genres":["Drama","Mystery","Thriller"],"imdb":8.0,"votes":"17,788","rtCrit":null,"rtAud":null,"tfp":null,"poster":"https://m.media-amazon.com/images/M/MV5BNjBkNDMzYzktZjBjMy00ZmU3LTk0MDEtNzAzNGFjMGE4MDQyXkEyXkFqcGc@._V1_QL75_UY562_CR3,0,380,562_.jpg","plot":"A widowed ex-military man hides his cognitive impairment from those close to him and the people in the village he interacts with daily. His son's new wife becomes curious about her father-in-law's odd behavior and unusual way of handling things.","seasons":null,"country":"India","tier":"8.0–8.4","why":"Slow-burn Malayalam mystery with a killer final act.","notes":"Missing-child dread, slow burn, no gore.","imdbUrl":"https://www.imdb.com/title/tt15980138/","rtUrl":null},{"id":"tt32820897","cat":"movie","catLabel":"Movie","title":"Demon Slayer: Kimetsu No Yaiba Infinity Castle","year":"2025","rated":"R","runtime":"155 min","genres":["Animation","Action","Adventure"],"imdb":8.3,"votes":"86,814","rtCrit":98,"rtAud":98,"tfp":null,"poster":"https://m.media-amazon.com/images/M/MV5BOGQ3YWUzYjEtMTJiYy00ZjQ0LWI0YjktYjhiNGVhNGExYTM3XkEyXkFqcGc@._V1_QL75_UX380_CR0,5,380,562_.jpg","plot":"The Demon Slayer Corps are drawn into the Infinity Castle, where Tanjiro and the Hashira face terrifying Upper Rank Hindi mein demons in a desperate fight as the final battle against Muzan Kibutsuji begins.","seasons":null,"country":"Japan, United States","tier":"8.0–8.4","why":"Peak animated set-pieces, arc payoff.","notes":"R. Intense animated violence, blood, character death.","imdbUrl":"https://www.imdb.com/title/tt32820897/","rtUrl":"https://www.rottentomatoes.com/m/demon_slayer_kimetsu_no_yaiba_infinity_castle"},{"id":"tt30472557","cat":"movie","catLabel":"Movie","title":"Chainsaw Man - The Movie: Reze Arc","year":"2025","rated":"R","runtime":"100 min","genres":["Animation","Action","Adventure"],"imdb":8.3,"votes":"70,184","rtCrit":96,"rtAud":98,"tfp":null,"poster":"https://m.media-amazon.com/images/M/MV5BZmMzNGVhODktYmU5MS00MDg1LThlNTEtNTMyYTg5MDA0Njk4XkEyXkFqcGc@._V1_QL75_UX380_CR0,0,380,562_.jpg","plot":"Denji became \"Chainsaw Man\", a boy with a devil's heart, and is now part of Special Division 4's devil hunters. After a date with Makima, the woman of his dreams, Denji takes shelter from the rain. There he meets Reze, a girl who works in a café.","seasons":null,"country":"Japan","tier":"8.0–8.4","why":"Dark, violent, stylish; strong standalone arc.","notes":"R. Graphic animated violence, body horror.","imdbUrl":"https://www.imdb.com/title/tt30472557/","rtUrl":"https://www.rottentomatoes.com/m/chainsaw_man_the_movie_reze_arc"},{"id":"tt9362722","cat":"movie","catLabel":"Movie","title":"Spider-Man: Across the Spider-Verse","year":"2023","rated":"PG","runtime":"140 min","genres":["Animation","Action","Adventure"],"imdb":8.5,"votes":"556,793","rtCrit":95,"rtAud":95,"tfp":null,"poster":"https://m.media-amazon.com/images/M/MV5BNThiZjA3MjItZGY5Ni00ZmJhLWEwN2EtOTBlYTA4Y2E0M2ZmXkEyXkFqcGc@._V1_QL75_UX380_CR0,1,380,562_.jpg","plot":"Miles Morales returns for the next chapter of the Oscar®-winning Spider-Verse saga, an epic adventure that will transport Brooklyn's full-time, friendly neighborhood Spider-Man across the Multiverse to join forces with Gwen Stacy and a new team of Spider-People to face off with a villain more powerful than anything they have eve…","seasons":null,"country":"United States","tier":"8.5+","why":"Best-in-class animation; multiverse done right.","notes":"PG. Fast action, mild peril, emotional beats.","imdbUrl":"https://www.imdb.com/title/tt9362722/","rtUrl":"https://www.rottentomatoes.com/m/spider_man_across_the_spider_verse"},{"id":"tt39139925","cat":"movie","catLabel":"Movie","title":"Dhurandhar: The Revenge","year":"2026","rated":"TV-MA","runtime":"235 min","genres":["Action","Crime","Thriller"],"imdb":8.2,"votes":"73,328","rtCrit":36,"rtAud":95,"tfp":null,"poster":"https://m.media-amazon.com/images/M/MV5BMzE2ZmIzNTEtZTE1OS00ZDFhLTk2Y2YtZDEyNGIxNTdiYWFlXkEyXkFqcGc@._V1_QL75_UY562_CR35,0,380,562_.jpg","plot":"Jaskirat Singh Rangi buries his identity beneath the calloused skin of a Karachi gangster. A sudden power vacuum opens the underworld gates, and he lunges forward, seizing control of the local syndicate to hunt the architects of a past atrocity. The path demands total submission to the lie.","seasons":null,"country":"India","tier":"8.0–8.4","why":"Brutal spy action, morally grey operators.","notes":"TV-MA. Brutal action, torture, strong language.","imdbUrl":"https://www.imdb.com/title/tt39139925/","rtUrl":"https://www.rottentomatoes.com/m/dhurandhar_the_revenge"},{"id":"tt28089784","cat":"movie","catLabel":"Movie","title":"Punjab '95","year":"2026","rated":"N/A","runtime":"169 min","genres":["Biography","Crime","Drama"],"imdb":8.8,"votes":"106,975","rtCrit":null,"rtAud":null,"tfp":null,"poster":"https://m.media-amazon.com/images/M/MV5BOTk1YTdiMDItZjAzOS00Njc0LTk3YTUtYjdiMWMyNDFhM2QzXkEyXkFqcGc@._V1_QL75_UY562_CR35,0,380,562_.jpg","plot":"Based on the life of prominent human rights activist Jaswant Singh Khalra.","seasons":null,"country":"India","tier":"8.5+","why":"Political crime drama with real teeth.","notes":"Political violence, torture, strong language.","imdbUrl":"https://www.imdb.com/title/tt28089784/","rtUrl":null},{"id":"tt27431598","cat":"movie","catLabel":"Movie","title":"Bramayugam","year":"2024","rated":"N/A","runtime":"139 min","genres":["Drama","Horror","Thriller"],"imdb":7.7,"votes":"18,838","rtCrit":null,"rtAud":86,"tfp":null,"poster":"https://m.media-amazon.com/images/M/MV5BNmZkZjQ5YzItOGQ0MC00ZmVlLWIxNjgtYzU2MmYzYjFmZWI2XkEyXkFqcGc@._V1_QL75_UY562_CR35,0,380,562_.jpg","plot":"In ancient Kerala, where Tantra/Maya held sway, Thevan, a novice singer from a caste of folk singers (Paanan), narrowly escapes from slavers and finds himself lost. While fleeing, he stumbles upon an eerie household in the middle of a forest with a seemingly benevolent master and his servant.","seasons":null,"country":"India","tier":"7.5–7.9","why":"Folk horror, one location, maximum dread.","notes":"Folk horror, black-and-white, slow-burn dread, disturbing.","imdbUrl":"https://www.imdb.com/title/tt27431598/","rtUrl":"https://www.rottentomatoes.com/m/bramayugam"},{"id":"tt15398776","cat":"movie","catLabel":"Movie","title":"Oppenheimer","year":"2023","rated":"R","runtime":"180 min","genres":["Biography","Drama","History"],"imdb":8.2,"votes":"1,103,487","rtCrit":93,"rtAud":91,"tfp":8.5,"poster":"https://m.media-amazon.com/images/M/MV5BN2JkMDc5MGQtZjg3YS00NmFiLWIyZmQtZTJmNTM5MjVmYTQ4XkEyXkFqcGc@._V1_QL75_UX380_CR0,0,380,562_.jpg","plot":"A dramatization of the life story of J. Robert Oppenheimer, the physicist who had a large hand in the development of the atomic bomb, thus helping end World War 2. We see his life from university days all the way to post-WW2, where his fame saw him embroiled in political machinations.","seasons":null,"country":"United States, United Kingdom","tier":"8.0–8.4","why":"Historical power-broker drama, no filler.","notes":"R. Sexuality, nudity, disturbing war imagery.","imdbUrl":"https://www.imdb.com/title/tt15398776/","rtUrl":"https://www.rottentomatoes.com/m/oppenheimer_2023"},{"id":"tt26446278","cat":"movie","catLabel":"Movie","title":"The Count of Monte Cristo","year":"2024","rated":"Not Rated","runtime":"178 min","genres":["Action","Adventure","Drama"],"imdb":7.6,"votes":"50,942","rtCrit":97,"rtAud":94,"tfp":7.7,"poster":"https://m.media-amazon.com/images/M/MV5BMTY4NTA3ZDYtMWVkYy00MGNkLTlmYzUtODQ5YjZlZTA3YjA5XkEyXkFqcGc@._V1_QL75_UY562_CR17,0,380,562_.jpg","plot":"Edmond Dantes becomes the target of a sinister plot and is arrested on his wedding day for a crime he did not commit. After 14 years in the island prison of Château d'If, he manages a daring escape.","seasons":null,"country":"France, Belgium","tier":"7.5–7.9","why":"Classic revenge, patient and lavish.","notes":"Revenge violence, duels, 3-hour epic.","imdbUrl":"https://www.imdb.com/title/tt26446278/","rtUrl":"https://www.rottentomatoes.com/m/the_count_of_monte_cristo_2024"},{"id":"tt2788316","cat":"series","catLabel":"Series","title":"Shogun","year":"2024–2026","rated":"TV-MA","runtime":"N/A","genres":["Action","Adventure","Drama"],"imdb":8.6,"votes":"253,648","rtCrit":null,"rtAud":90,"tfp":10.0,"poster":"https://m.media-amazon.com/images/M/MV5BZmJkMDRjYzEtMWI3Ny00OWE3LWJlNTItMGQ1MTQzMzc3NDY5XkEyXkFqcGc@._V1_QL75_UY562_CR35,0,380,562_.jpg","plot":"Set in the 17th Century, the story is told from the perspective of British hero John Blackthorne, a sailor who rises from outsider to samurai, while being used as a pawn in Japanese leader Toranaga's struggle to reach the top of the ruling chain, or Shogun.","seasons":"3","country":"United States","tier":"8.5+","why":"Samurai power chess; 10/10 craft.","notes":"TV-MA. Graphic violence, seppuku, sexual content.","imdbUrl":"https://www.imdb.com/title/tt2788316/","rtUrl":"https://www.rottentomatoes.com/m/shogun"},{"id":"tt15435876","cat":"series","catLabel":"Series","title":"The Penguin","year":"2024","rated":"TV-MA","runtime":"N/A","genres":["Crime","Drama"],"imdb":8.6,"votes":"251,105","rtCrit":95,"rtAud":85,"tfp":7.3,"poster":"https://m.media-amazon.com/images/M/MV5BYmU3MzYzOWEtOTdkZi00YzA1LTliMzQtNDdiZDBjY2FiNmFlXkEyXkFqcGc@._V1_QL75_UX380_CR0,0,380,562_.jpg","plot":"Following the events of The Batman (2022), Oz Cobb, a.k.a. the Penguin, makes a play to seize the reins of the crime world in Gotham.","seasons":"1","country":"United States","tier":"8.5+","why":"Gotham crime rise; Oz is a great monster.","notes":"TV-MA. Brutal violence, strong language.","imdbUrl":"https://www.imdb.com/title/tt15435876/","rtUrl":"https://www.rottentomatoes.com/tv/the_penguin"},{"id":"tt27628576","cat":"series","catLabel":"Series","title":"The Long Season","year":"2023","rated":"N/A","runtime":"N/A","genres":["Crime","Drama","Family"],"imdb":8.8,"votes":"1,759","rtCrit":null,"rtAud":null,"tfp":null,"poster":"https://m.media-amazon.com/images/M/MV5BMmRlYjVjYTctZjc5OS00NmI1LTk5YTgtMWUwMWMyNGViNWE1XkEyXkFqcGc@._V1_QL75_UX380_CR0,4,380,562_.jpg","plot":"In the small town of Hualin, taxi driver Wang Xiang (played by Fan Wei) never dreamed that he would have the opportunity to meet the person he most wanted to meet and yet feared the most in his life. Is it an enemy or a friend? If he meets them, he must explain it to himself and to his son.","seasons":"1","country":"China","tier":"8.5+","why":"Chinese crime epic; 12 tight episodes.","notes":"Crime violence, slow burn, subtitles.","imdbUrl":"https://www.imdb.com/title/tt27628576/","rtUrl":null},{"id":"tt31510819","cat":"series","catLabel":"Series","title":"MobLand","year":"2025–","rated":"TV-MA","runtime":"N/A","genres":["Crime","Drama"],"imdb":8.3,"votes":"147,224","rtCrit":83,"rtAud":75,"tfp":null,"poster":"https://m.media-amazon.com/images/M/MV5BZDc4MmYxNTAtM2ViYy00YWQ4LThjZWUtNDZjNTZjNDFhNzBjXkEyXkFqcGc@._V1_QL75_UX380_CR0,4,380,562_.jpg","plot":"Power is up for grabs as two warring crime families clash in a battle that threatens to topple empires. In the crossfire stands Harry Da Souza, a street-smart 'fixer' who knows too well where loyalties lie when opposing forces collide.","seasons":"3","country":"United Kingdom, United States","tier":"8.0–8.4","why":"London gangland succession war.","notes":"TV-MA. Graphic violence, strong language.","imdbUrl":"https://www.imdb.com/title/tt31510819/","rtUrl":"https://www.rottentomatoes.com/tv/mobland"},{"id":"tt24640580","cat":"series","catLabel":"Series","title":"Moving","year":"2023","rated":"TV-MA","runtime":"N/A","genres":["Action","Adventure","Drama"],"imdb":8.4,"votes":"17,385","rtCrit":100,"rtAud":97,"tfp":6.0,"poster":"https://m.media-amazon.com/images/M/MV5BNTg4NTI5NmItNGJjNC00ZmFhLTg0NzctZWQxZjAzYTAyNTQwXkEyXkFqcGc@._V1_QL75_UY562_CR35,0,380,562_.jpg","plot":"The quiet lives of three high school students with genetic superhuman abilities turn upside down when a mysterious organization starts to hunt them down one by one.","seasons":"1","country":"South Korea","tier":"8.0–8.4","why":"Superpowered family drama with real stakes.","notes":"Superhuman violence, teen bullying, heavy emotion.","imdbUrl":"https://www.imdb.com/title/tt24640580/","rtUrl":"https://www.rottentomatoes.com/tv/moving_2023"},{"id":"tt20600022","cat":"series","catLabel":"Series","title":"The Worst of Evil","year":"2023","rated":"TV-MA","runtime":"N/A","genres":["Action","Crime","Drama"],"imdb":8.3,"votes":"8,598","rtCrit":null,"rtAud":null,"tfp":null,"poster":"https://m.media-amazon.com/images/M/MV5BNjZjMzA1N2YtYTMzMy00YmZkLWFiNzItZjlkOThhM2E4NWQwXkEyXkFqcGc@._V1_QL75_UX380_CR0,4,380,562_.jpg","plot":"Park Jun-Mo (Ji Chang-Wook) is a police officer. For a drug investigation that leads into the drug trade between South Korea, China, and Japan, Park Joon-Mo infiltrates a criminal organization. Meanwhile, Park Jun-Mo is married to Yu Eui-Jeong (Lim Se-Mi).","seasons":"1","country":"South Korea","tier":"8.0–8.4","why":"Undercover crime spiral, Korean grit.","notes":"TV-MA. Brutal violence, drug-trade cruelty.","imdbUrl":"https://www.imdb.com/title/tt20600022/","rtUrl":null},{"id":"tt28106730","cat":"series","catLabel":"Series","title":"The Trauma Code: Heroes on Call","year":"2025","rated":"TV-MA","runtime":"N/A","genres":["Comedy","Drama"],"imdb":8.4,"votes":"11,965","rtCrit":null,"rtAud":99,"tfp":null,"poster":"https://m.media-amazon.com/images/M/MV5BNWMxMjgyNTktOTBjYy00M2RhLTk5YTgtZjg5NGFiZTg0MzgyXkEyXkFqcGc@._V1_QL75_UY562_CR63,0,380,562_.jpg","plot":"Baek Gang-Hyeok (Ju Ji-Hoon) is a genius trauma surgeon who has performed surgeries in conflict zones around the world. He is confident in his abilities and has a bulldozer like personality when he thinks he is doing the right thing. He begins to work at a university hospital and leads the severe trauma team there.","seasons":"1","country":"South Korea","tier":"8.0–8.4","why":"Medical competence porn, fast and fun.","notes":"TV-MA. Surgical gore, emergency peril.","imdbUrl":"https://www.imdb.com/title/tt28106730/","rtUrl":"https://www.rottentomatoes.com/tv/the_trauma_code_heroes_on_call"},{"id":"tt9253284","cat":"series","catLabel":"Series","title":"Andor","year":"2022–2025","rated":"TV-14","runtime":"N/A","genres":["Adventure","Drama","Fantasy"],"imdb":8.6,"votes":"286,840","rtCrit":96,"rtAud":89,"tfp":null,"poster":"https://m.media-amazon.com/images/M/MV5BNGI2MTJjMjUtMTJhOC00YTY2LTg1NjUtMTdmMjg4YTk2YjM5XkEyXkFqcGc@._V1_QL75_UX380_CR0,0,380,562_.jpg","plot":"In an era filled with danger, deception, and intrigue, Cassian Andor embarks on a path that is destined to turn him into a Rebel hero.","seasons":"2","country":"United States","tier":"8.5+","why":"Rebellion as spycraft; slow-burn payoff.","notes":"TV-14. War violence, torture themes, slow-burn politics.","imdbUrl":"https://www.imdb.com/title/tt9253284/","rtUrl":"https://www.rottentomatoes.com/tv/andor"},{"id":"tt27497448","cat":"series","catLabel":"Series","title":"A Knight of the Seven Kingdoms","year":"2026–","rated":"TV-MA","runtime":"N/A","genres":["Adventure","Drama","Fantasy"],"imdb":8.6,"votes":"289,175","rtCrit":94,"rtAud":79,"tfp":9.2,"poster":"https://m.media-amazon.com/images/M/MV5BYzg4M2U3YWMtMWY4MS00MzFkLTk2ZWQtOThiOGYxZDEyMGQ2XkEyXkFqcGc@._V1_QL75_UX380_CR0,4,380,562_.jpg","plot":"A century before the events of 'Game of Thrones,' two unlikely heroes wandered Westeros... a young, naïve but courageous knight, Ser Duncan the Tall, and his diminutive squire, Egg.","seasons":"2","country":"United States","tier":"8.5+","why":"Westeros small-scale, character-first.","notes":"TV-MA. Medieval violence, sexual content.","imdbUrl":"https://www.imdb.com/title/tt27497448/","rtUrl":"https://www.rottentomatoes.com/tv/a_knight_of_the_seven_kingdoms"},{"id":"tt11280740","cat":"series","catLabel":"Series","title":"Severance","year":"2022–","rated":"TV-MA","runtime":"N/A","genres":["Drama","Mystery","Sci-Fi"],"imdb":8.6,"votes":"410,618","rtCrit":95,"rtAud":80,"tfp":8.5,"poster":"https://m.media-amazon.com/images/M/MV5BZDI5YzJhODQtMzQyNy00YWNmLWIxMjUtNDBjNjA5YWRjMzExXkEyXkFqcGc@._V1_QL75_UX380_CR0,4,380,562_.jpg","plot":"Mark leads a team of office workers whose memories have been surgically divided between their work and personal lives. When a mysterious colleague appears outside of work, it begins a journey to discover the truth about their jobs.","seasons":"3","country":"United States","tier":"8.5+","why":"Workplace sci-fi with a perfect mystery box.","notes":"TV-MA. Unsettling imagery, self-harm-adjacent scenes.","imdbUrl":"https://www.imdb.com/title/tt11280740/","rtUrl":"https://www.rottentomatoes.com/tv/severance"},{"id":"tt26225038","cat":"series","catLabel":"Series","title":"Death's Game","year":"2023–2024","rated":"TV-MA","runtime":"N/A","genres":["Drama","Fantasy","Horror"],"imdb":8.4,"votes":"25,828","rtCrit":null,"rtAud":null,"tfp":null,"poster":"https://m.media-amazon.com/images/M/MV5BNzU1OTc1YzQtMjAxOS00NjhhLTk2ZmQtM2M2YTU4NTZlYjM4XkEyXkFqcGc@._V1_QL75_UX380_CR0,4,380,562_.jpg","plot":"Choi Yee-Jae (Seo In-Guk) grew up in a poor family background, but he had a bright and kind personality. After 7 years of failing to find a decent job, he is now full of desperation and despair.","seasons":"1","country":"South Korea","tier":"8.0–8.4","why":"High-concept survival; 12 deaths, no filler.","notes":"TV-MA. Suicide premise, graphic deaths.","imdbUrl":"https://www.imdb.com/title/tt26225038/","rtUrl":null},{"id":"tt12637874","cat":"series","catLabel":"Series","title":"Fallout","year":"2024–","rated":"TV-MA","runtime":"N/A","genres":["Action","Adventure","Drama"],"imdb":8.3,"votes":"405,147","rtCrit":94,"rtAud":96,"tfp":null,"poster":"https://m.media-amazon.com/images/M/MV5BYzE1MTZmY2ItMTgxNi00OGU5LTk4NTItMmY2ODFhYzhjZjRkXkEyXkFqcGc@._V1_QL75_UX380_CR0,57,380,562_.jpg","plot":"Years after a nuclear apocalypse devastates America, a violent raid by bandits on an underground fallout shelter forces one of its residents to set out into a barren wasteland filled with radiation, mutated monsters, and a lawless society of those who remained on the surface.","seasons":"3","country":"United States","tier":"8.0–8.4","why":"Game-faithful wasteland comedy and gore.","notes":"TV-MA. Gore, dark humor, radiation horror.","imdbUrl":"https://www.imdb.com/title/tt12637874/","rtUrl":"https://www.rottentomatoes.com/tv/fallout"},{"id":"tt26450613","cat":"series","catLabel":"Series","title":"A Shop for Killers","year":"2024–2026","rated":"TV-MA","runtime":"N/A","genres":["Action","Drama","Mystery"],"imdb":8.0,"votes":"12,726","rtCrit":100,"rtAud":90,"tfp":8.4,"poster":"https://m.media-amazon.com/images/M/MV5BNTEwYmIxNWItM2Q5My00ZDEzLWEyNDAtODIzM2E2N2U4OGQyXkEyXkFqcGc@._V1_QL75_UY562_CR35,0,380,562_.jpg","plot":"Jeong Hi An, a girl who tragically loses her parents. She is raised by Jeong Jin Man, her uncle, who runs a shopping mall. When she was little, her mother was murdered by her father, and he took his own life on the day of her grandmother's funeral.","seasons":"2","country":"South Korea","tier":"8.0–8.4","why":"Assassin siege; lean and stylish.","notes":"TV-MA. Stylized, brutal violence.","imdbUrl":"https://www.imdb.com/title/tt26450613/","rtUrl":"https://www.rottentomatoes.com/tv/a_shop_for_killers"},{"id":"tt35304338","cat":"series","catLabel":"Series","title":"Study Group","year":"2025","rated":"N/A","runtime":"N/A","genres":["Action","Comedy","Crime"],"imdb":8.2,"votes":"7,994","rtCrit":null,"rtAud":null,"tfp":null,"poster":"https://m.media-amazon.com/images/M/MV5BYzQ0MmE0ZTUtNTlkNS00NDU2LThiYTEtNjJjYTdmZDNiOWUyXkEyXkFqcGc@._V1_QL75_UY562_CR1,0,380,562_.jpg","plot":"Yoon Ga-Min (Minhyun) is a student at a notorious vocational high school with many troubled students. He has the appearance of a model student with glasses, neat appearance, and innocent looks. He wants to do well academically, but his scores are always at the near bottom of the school.","seasons":"1","country":"South Korea","tier":"8.0–8.4","why":"School brawler; fight choreography over drama.","notes":"TV-MA. School violence, bullying.","imdbUrl":"https://www.imdb.com/title/tt35304338/","rtUrl":null},{"id":"tt32237534","cat":"series","catLabel":"Series","title":"Last Samurai Standing","year":"2025–","rated":"TV-MA","runtime":"N/A","genres":["Action","Drama","History"],"imdb":7.5,"votes":"22,523","rtCrit":100,"rtAud":86,"tfp":6.7,"poster":"https://m.media-amazon.com/images/M/MV5BODAxNWYyOTgtN2YyMS00MzU1LWFkNzYtYmQyYmJjMGQ2ZGM0XkEyXkFqcGc@._V1_QL75_UX380_CR0,0,380,562_.jpg","plot":"In 1878, late at night, 292 highly skilled samurais gather at the Tenryuji Temple in Kyoto to participate in a dangerous battle royale. They are lured there by the offer 100 billion yen for the grand prize. Each of the participants are given a wooden tag. The one who makes it to Tokyo will win the prize.","seasons":"1","country":"Japan","tier":"7.5–7.9","why":"Tournament swordplay, mean and brisk.","notes":"TV-MA. Graphic sword violence.","imdbUrl":"https://www.imdb.com/title/tt32237534/","rtUrl":"https://www.rottentomatoes.com/tv/last_samurai_standing"},{"id":"tt22248376","cat":"anime","catLabel":"Anime","title":"Frieren: Beyond Journey's End","year":"2023–","rated":"TV-14","runtime":"N/A","genres":["Animation","Adventure","Comedy"],"imdb":8.9,"votes":"85,660","rtCrit":null,"rtAud":null,"tfp":null,"poster":"https://m.media-amazon.com/images/M/MV5BZTI4ZGMxN2UtODlkYS00MTBjLWE1YzctYzc3NDViMGI0ZmJmXkEyXkFqcGc@._V1_QL75_UX380_CR0,4,380,562_.jpg","plot":"The demon king has been defeated, and the victorious hero party returns home before disbanding. The four - mage Frieren, hero Himmel, priest Heiter, and warrior Eisen - reminisce about their decade-long journey as the moment to bid each other farewell arrives.","seasons":"3","country":"Japan","tier":"8.5+","why":"Quiet, melancholy fantasy; no filler.","notes":"TV-14. Fantasy violence, melancholy, quiet grief.","imdbUrl":"https://www.imdb.com/title/tt22248376/","rtUrl":null},{"id":"tt13309742","cat":"anime","catLabel":"Anime","title":"Blue Eye Samurai","year":"2023–","rated":"TV-MA","runtime":"N/A","genres":["Animation","Action","Adventure"],"imdb":8.7,"votes":"107,801","rtCrit":97,"rtAud":93,"tfp":9.1,"poster":"https://m.media-amazon.com/images/M/MV5BY2E4ZGIwZWYtMGRiMS00NGI2LTgwYzAtZGY5NGVhNzY3Yjk0XkEyXkFqcGc@._V1_QL75_UX380_CR0,0,380,562_.jpg","plot":"In Edo-period Japan, a young warrior driven by a dream of revenge cuts a bloody path toward destiny.","seasons":"2","country":"United States","tier":"8.5+","why":"Revenge quest with adult animation craft.","notes":"TV-MA. Graphic violence, sexual content, nudity.","imdbUrl":"https://www.imdb.com/title/tt13309742/","rtUrl":"https://www.rottentomatoes.com/tv/blue_eye_samurai"},{"id":"tt21209876","cat":"anime","catLabel":"Anime","title":"Solo Leveling","year":"2024–","rated":"TV-MA","runtime":"N/A","genres":["Animation","Action","Adventure"],"imdb":8.5,"votes":"121,674","rtCrit":100,"rtAud":80,"tfp":null,"poster":"https://m.media-amazon.com/images/M/MV5BM2M4YzdkMTEtMjUyYy00ZWY0LWI5ODQtNGRkZWQ1MzU5MWM2XkEyXkFqcGc@._V1_QL75_UY562_CR9,0,380,562_.jpg","plot":"In a world where hunters, humans who possess magical abilities, must battle deadly monsters to protect the human race from certain annihilation, a notoriously weak hunter named Sung Jinwoo finds himself in a seemingly endless struggle for survival.","seasons":"2","country":"Japan, South Korea","tier":"8.5+","why":"Power-progression wish fulfillment; pure system.","notes":"TV-MA. Fantasy violence, blood.","imdbUrl":"https://www.imdb.com/title/tt21209876/","rtUrl":"https://www.rottentomatoes.com/tv/solo_leveling"},{"id":"tt21975436","cat":"anime","catLabel":"Anime","title":"Kaiju No. 8","year":"2024–2025","rated":"TV-MA","runtime":"N/A","genres":["Animation","Action","Adventure"],"imdb":8.2,"votes":"34,402","rtCrit":100,"rtAud":86,"tfp":null,"poster":"https://m.media-amazon.com/images/M/MV5BM2VmNTc3OWQtOTVmMy00MGZlLTk3N2QtM2YwZDE5MWVjZmM5XkEyXkFqcGc@._V1_QL75_UX380_CR0,4,380,562_.jpg","plot":"In Japan, monsters known as kaiju regularly attack the populace with the Japanese Defense Force tasked with killing them. After their town was destroyed by kaiju when they were children, childhood friends Kafka Hibino and Mina Ashiro both vowed to become members of the Defense Force.","seasons":"2","country":"Japan","tier":"8.0–8.4","why":"Monster action; underdog escalation.","notes":"TV-14. Monster violence, mild language.","imdbUrl":"https://www.imdb.com/title/tt21975436/","rtUrl":"https://www.rottentomatoes.com/tv/kaiju_no_8"},{"id":"tt36988358","cat":"anime","catLabel":"Anime","title":"Takopi's Original Sin","year":"2025","rated":"Approved","runtime":"N/A","genres":["Animation","Drama","Sci-Fi"],"imdb":8.7,"votes":"29,999","rtCrit":null,"rtAud":null,"tfp":null,"poster":"https://m.media-amazon.com/images/M/MV5BYmRkN2I1OGEtOWM3Yi00NjViLWJjMDktYTNmZTMxYjBiNTU3XkEyXkFqcGc@._V1_QL75_UY562_CR21,0,380,562_.jpg","plot":"A squid-like creature, known as a Happian, leaves his home planet with the desire to spread happiness across the universe. He lands on Earth, but quickly finds himself in danger of captivity by its inhabitants. Fortunately, he is found by an unsmiling little girl named Shizuka Kuze, who feeds him and names him Takopii.","seasons":"1","country":"Japan","tier":"8.5+","why":"Short, devastating; subverts cute mascot.","notes":"Heavy: bullying, child abuse, suicide/self-harm.","imdbUrl":"https://www.imdb.com/title/tt36988358/","rtUrl":null},{"id":"tt26743760","cat":"anime","catLabel":"Anime","title":"The Apothecary Diaries","year":"2023–","rated":"TV-14","runtime":"N/A","genres":["Animation","Drama","History"],"imdb":8.6,"votes":"28,453","rtCrit":null,"rtAud":96,"tfp":null,"poster":"https://m.media-amazon.com/images/M/MV5BNjAxMmFjZjgtYjM1ZS00NzdmLTliZDktZmIyMzU5YTBlNDBmXkEyXkFqcGc@._V1_QL75_UX380_CR0,4,380,562_.jpg","plot":"In a certain country in the East, Maomao, a young girl who works as a pharmacist in the red-light district, is kidnapped and sold to the imperial palace as a servant.","seasons":"3","country":"Japan","tier":"8.5+","why":"Court intrigue with a sharp lead.","notes":"TV-14. Poison, court intrigue, mild peril.","imdbUrl":"https://www.imdb.com/title/tt26743760/","rtUrl":"https://www.rottentomatoes.com/tv/the_apothecary_diaries"},{"id":"tt30217403","cat":"anime","catLabel":"Anime","title":"Dandadan","year":"2024–","rated":"TV-MA","runtime":"N/A","genres":["Animation","Action","Adventure"],"imdb":8.3,"votes":"59,492","rtCrit":null,"rtAud":null,"tfp":null,"poster":"https://m.media-amazon.com/images/M/MV5BYWFhOWMxNTYtZThiMi00ZmQ5LTlmODktN2QwNzUyZjMyZGQzXkEyXkFqcGc@._V1_QL75_UY562_CR9,0,380,562_.jpg","plot":"When Momo and Okarun's beliefs clash, they're thrown into a world of ghosts, aliens and awakened powers.","seasons":"3","country":"Japan","tier":"8.0–8.4","why":"Chaos comedy plus genuine romance; wild.","notes":"TV-MA. Sexual humor, body horror, violence.","imdbUrl":"https://www.imdb.com/title/tt30217403/","rtUrl":null},{"id":"tt33998607","cat":"anime","catLabel":"Anime","title":"One Piece Fan Letter","year":"2024","rated":"TV-14","runtime":"25 min","genres":["Animation","Short","Action"],"imdb":9.2,"votes":"25,599","rtCrit":null,"rtAud":null,"tfp":null,"poster":"https://m.media-amazon.com/images/M/MV5BM2E5ZTlkYzMtZjYwNy00ZDc4LWE5ZWUtMGNmZjgxMzZjMTJmXkEyXkFqcGc@._V1_QL75_UY562_CR9,0,380,562_.jpg","plot":"Two years after the Summit War in which Straw Hat pirate Luffy lost his brother Ace, the story takes place on the Sabaody Archipelago. The protagonist, a young girl who has a strong admiration for Nami, sets off on a small adventure.","seasons":null,"country":"Japan","tier":"8.5+","why":"One perfect 20-minute One Piece story.","notes":"TV-14. Naval battle violence.","imdbUrl":"https://www.imdb.com/title/tt33998607/","rtUrl":null},{"id":"tt12343534","cat":"anime","catLabel":"Anime","title":"Jujutsu Kaisen","year":"2020–","rated":"TV-MA","runtime":"24 min","genres":["Animation","Action","Adventure"],"imdb":8.5,"votes":"223,472","rtCrit":null,"rtAud":88,"tfp":7.4,"poster":"https://m.media-amazon.com/images/M/MV5BMjBlNTExMDAtMWZjZi00MDc5LWFkMjgtZDU0ZWQ5ODk3YWY5XkEyXkFqcGc@._V1_QL75_UX380_CR0,4,380,562_.jpg","plot":"Yuji Itadori, a kind-hearted teenager, joins his school's Occult Club for fun, but one day is visited by an actual sorcerer who can manipulate the energy between beings for their own use. He tells Yuji about a cursed talisman - the finger of Sukuna, a demon - and its being targeted by other cursed beings.","seasons":"3","country":"Japan, United States","tier":"8.5+","why":"Best modern shonen fight choreography.","notes":"TV-MA. Graphic cursed-spirit violence.","imdbUrl":"https://www.imdb.com/title/tt12343534/","rtUrl":"https://www.rottentomatoes.com/tv/jujutsu_kaisen_2020"},{"id":"tt10233448","cat":"anime","catLabel":"Anime","title":"Vinland Saga","year":"2019–2023","rated":"TV-MA","runtime":"24 min","genres":["Animation","Action","Adventure"],"imdb":8.9,"votes":"152,737","rtCrit":100,"rtAud":81,"tfp":null,"poster":"https://m.media-amazon.com/images/M/MV5BNDA3MGNmZTEtMzFiMy00ZmViLThhNmQtMjQ4ZDc5MDEyN2U1XkEyXkFqcGc@._V1_QL75_UY562_CR9,0,380,562_.jpg","plot":"A young man named Thorfinn finds himself in a quest for revenge against the man responsible for a traumatic tragedy in his early life.","seasons":"2","country":"Japan","tier":"8.5+","why":"Viking revenge that becomes anti-violence.","notes":"TV-MA. War violence, slavery, grief.","imdbUrl":"https://www.imdb.com/title/tt10233448/","rtUrl":"https://www.rottentomatoes.com/tv/vinland_saga"},{"id":"tt21621494","cat":"anime","catLabel":"Anime","title":"Delicious in Dungeon","year":"2024–","rated":"TV-MA","runtime":"N/A","genres":["Animation","Adventure","Comedy"],"imdb":8.1,"votes":"15,366","rtCrit":100,"rtAud":94,"tfp":null,"poster":"https://m.media-amazon.com/images/M/MV5BNmU3ZGFhMmYtNzczYy00NTE0LThkYjgtNWFiYTY2NzRkM2QzXkEyXkFqcGc@._V1_QL75_UX380_CR0,4,380,562_.jpg","plot":"Adventuring knight Laios Touden leads a small party through a seemingly endless dungeon, a subterranean maze full of dangerous monsters and precarious traps. Through the use of advanced magic, an explorer can sometimes be resurrected, allowing them to learn from past mistakes and give traversing the dungeon another go.","seasons":"1","country":"Japan","tier":"8.0–8.4","why":"Dungeon-crawl comedy with real heart.","notes":"TV-14. Monster combat, comedic tone.","imdbUrl":"https://www.imdb.com/title/tt21621494/","rtUrl":"https://www.rottentomatoes.com/tv/delicious_in_dungeon"},{"id":"tt26737616","cat":"anime","catLabel":"Anime","title":"Pluto","year":"2023","rated":"TV-14","runtime":"N/A","genres":["Animation","Action","Drama"],"imdb":8.1,"votes":"21,525","rtCrit":100,"rtAud":94,"tfp":9.3,"poster":"https://m.media-amazon.com/images/M/MV5BZTI1YTYxMzgtMzM5MS00YWQzLTk1YTAtNWE2NTJhODVhNTZlXkEyXkFqcGc@._V1_QL75_UX380_CR0,0,380,562_.jpg","plot":"In a distant future where sentient humanoid robots pass for human, someone or something is out to destroy the seven great robots of the world. Europol's top detective Gesicht is assigned to investigate these mysterious robot serial murders the only catch is that he himself is one of the seven targets.","seasons":"1","country":"Japan, Poland","tier":"8.0–8.4","why":"Urasawa mystery; robots and grief.","notes":"TV-14. Robot violence, existential dread.","imdbUrl":"https://www.imdb.com/title/tt26737616/","rtUrl":"https://www.rottentomatoes.com/tv/pluto"},{"id":"tt32612521","cat":"anime","catLabel":"Anime","title":"Gachiakuta","year":"2025–","rated":"TV-MA","runtime":"N/A","genres":["Animation","Action","Adventure"],"imdb":8.0,"votes":"16,860","rtCrit":100,"rtAud":91,"tfp":null,"poster":"https://m.media-amazon.com/images/M/MV5BZDU5ZmEzODYtMDU2OS00NTZiLTk4MWYtYWUyZWUzNGU2ODdjXkEyXkFqcGc@._V1_QL75_UX380_CR0,4,380,562_.jpg","plot":"Living in the slums of a wealthy town, Rudo and his foster father Legto try to coexist with the rest of the town's residents, but Rudo despises the wastefulness of the upper class.","seasons":"1","country":"Japan, South Korea","tier":"8.0–8.4","why":"Class rage, grime, and expressive action.","notes":"TV-MA. Class violence, body horror.","imdbUrl":"https://www.imdb.com/title/tt32612521/","rtUrl":"https://www.rottentomatoes.com/tv/gachiakuta"},{"id":"tt2560140","cat":"anime","catLabel":"Anime","title":"Attack on Titan","year":"2013–2023","rated":"TV-MA","runtime":"24 min","genres":["Animation","Action","Adventure"],"imdb":9.1,"votes":"746,262","rtCrit":96,"rtAud":95,"tfp":9.3,"poster":"https://m.media-amazon.com/images/M/MV5BZjliODY5MzQtMmViZC00MTZmLWFhMWMtMjMwM2I3OGY1MTRiXkEyXkFqcGc@._V1_QL75_UY562_CR9,0,380,562_.jpg","plot":"Humans are nearly exterminated by giant creatures called Titans. Titans are typically several stories tall, seem to have no intelligence, devour human beings and, worst of all, seem to do it for the pleasure rather than as a food source.","seasons":"4","country":"Japan","tier":"8.5+","why":"Deterministic tragedy; unmatched scale.","notes":"TV-MA. Extreme violence, genocide themes.","imdbUrl":"https://www.imdb.com/title/tt2560140/","rtUrl":"https://www.rottentomatoes.com/tv/attack_on_titan"},{"id":"tt5626028","cat":"anime","catLabel":"Anime","title":"My Hero Academia","year":"2016–2026","rated":"TV-14","runtime":"24 min","genres":["Animation","Action","Adventure"],"imdb":8.2,"votes":"127,980","rtCrit":100,"rtAud":88,"tfp":null,"poster":"https://m.media-amazon.com/images/M/MV5BY2QzODA5OTQtYWJlNi00ZjIzLThhNTItMDMwODhlYzYzMjA2XkEyXkFqcGc@._V1_QL75_UX380_CR0,4,380,562_.jpg","plot":"In a world populated with superhumans, the superhero-loving Izuku Midoriya is without power. However, after the Quirkless dreamer Izuku inherits the powers of the world's best superhero, All Might, his hopes of becoming the top hero are now possible.","seasons":"8","country":"Japan","tier":"8.0–8.4","why":"Superhero school, big set pieces.","notes":"TV-14. Superhero violence, bullying.","imdbUrl":"https://www.imdb.com/title/tt5626028/","rtUrl":"https://www.rottentomatoes.com/tv/my_hero_academia"},{"id":"tt28618556","cat":"anim","catLabel":"Animation","title":"Lord of Mysteries","year":"2025–","rated":"TV-14","runtime":"N/A","genres":["Animation","Action","Adventure"],"imdb":8.5,"votes":"17,242","rtCrit":null,"rtAud":null,"tfp":null,"poster":"https://m.media-amazon.com/images/M/MV5BMWE1ZWYwZGUtZjRmOS00NzUzLTlkZmUtMTEwMjNhNTVmNDIwXkEyXkFqcGc@._V1_QL75_UX380_CR0,4,380,562_.jpg","plot":"With the rising tide of steam power and machinery, who can come close to being a Beyonder? Shrouded in the fog of history and darkness, who or what is the lurking evil that murmurs into our ears? Waking up to be faced with a string of mysteries, Zhou Mingrui finds himself reincarnated as Klein Moretti in an alternate Victorian e…","seasons":"1","country":"China","tier":"8.5+","why":"Occult rules-based power system; 3D.","notes":"TV-14. Occult horror, murders, 3D animation.","imdbUrl":"https://www.imdb.com/title/tt28618556/","rtUrl":null},{"id":"tt27432264","cat":"anim","catLabel":"Animation","title":"Renegade Immortal","year":"2023–","rated":"N/A","runtime":"N/A","genres":["Animation","Action","Adventure"],"imdb":8.5,"votes":"904","rtCrit":null,"rtAud":null,"tfp":null,"poster":"https://m.media-amazon.com/images/M/MV5BZTkwZDM0OGItM2ZiZi00ZWM5LTg0MDUtMGE2YjkyYjMxNTQwXkEyXkFqcGc@._V1_QL75_UY562_CR11,0,380,562_.jpg","plot":"Based on the critically acclaimed Chinese novel Xian Ni by Er Gen, Renegade Immortal follows the captivating story of Wang Lin, a young man born with a crippled soul. Undeterred by his limitations, Wang Lin embarks on a determined path to cultivate immortality and achieve unimaginable power.","seasons":"1","country":"China","tier":"8.5+","why":"Cultivation with a genuinely ruthless lead.","notes":"Cultivation violence, ruthless protagonist; 3D.","imdbUrl":"https://www.imdb.com/title/tt27432264/","rtUrl":null},{"id":"tt14976292","cat":"anim","catLabel":"Animation","title":"Link Click","year":"2021–","rated":"TV-14","runtime":"N/A","genres":["Animation","Crime","Drama"],"imdb":8.5,"votes":"7,946","rtCrit":null,"rtAud":null,"tfp":null,"poster":"https://m.media-amazon.com/images/M/MV5BMzgzYjA2NmYtZmFhYi00ODBlLWI2NmMtM2I3NWMzZDE3ZTBiXkEyXkFqcGc@._V1_QL75_UX380_CR0,4,380,562_.jpg","plot":"Using superpowers to enter their clientele's photos one by one, Cheng Xiaoshi and Lu Guang take their work seriously at \"Time Photo Studio,\" a small photography shop set in the backdrop of a modern metropolis.","seasons":"4","country":"Japan, China","tier":"8.5+","why":"Time-loop thriller; emotional gut punches.","notes":"TV-14. Time-travel tragedy, assault, death.","imdbUrl":"https://www.imdb.com/title/tt14976292/","rtUrl":null},{"id":"tt12953630","cat":"anim","catLabel":"Animation","title":"Fog Hill of Five Elements","year":"2020–2023","rated":"Not Rated","runtime":"1 min","genres":["Animation","Action","Adventure"],"imdb":8.3,"votes":"1,840","rtCrit":null,"rtAud":null,"tfp":null,"poster":"https://m.media-amazon.com/images/M/MV5BYzA5MGY2NGYtYjY0ZS00ODYyLWE1NGMtNTJhNmM5OTAwMGFiXkEyXkFqcGc@._V1_QL75_UY562_CR21,0,380,562_.jpg","plot":"A legend tells that a long time ago, monsters could give the ability to certain elected officials to master the five elements. But for that, you have to go through the dangerous foggy mountains. Follows the adventures of one of these elected officials.","seasons":"2","country":"China","tier":"8.0–8.4","why":"Pure elemental fight animation.","notes":"TV-14. Intense animated combat.","imdbUrl":"https://www.imdb.com/title/tt12953630/","rtUrl":null},{"id":"tt12409194","cat":"anim","catLabel":"Animation","title":"Battle Through the Heavens","year":"2017–","rated":"N/A","runtime":"1 min","genres":["Animation","Action","Adventure"],"imdb":8.5,"votes":"3,230","rtCrit":null,"rtAud":null,"tfp":null,"poster":"https://m.media-amazon.com/images/M/MV5BMzA2MTg5NmUtNmQ2Mi00YTQ5LTk4ZjctMGIxNWRkYjZmNDRlXkEyXkFqcGc@._V1_QL75_UY562_CR11,0,380,562_.jpg","plot":"In a land where no magic is present. A land where the strong make the rules and weak have to obey. A land filled with alluring treasures and beauty, yet also filled with unforeseen danger. Three years ago, Xiao Yan, who had shown talents none had seen in decades, suddenly lost everything.","seasons":"5","country":"China","tier":"8.5+","why":"Cultivation grinding, endless escalation.","notes":"Cultivation violence; 3D, very long-running.","imdbUrl":"https://www.imdb.com/title/tt12409194/","rtUrl":null},{"id":"tt10384610","cat":"anim","catLabel":"Animation","title":"Scissor Seven","year":"2018–","rated":"TV-MA","runtime":"N/A","genres":["Animation","Action","Adventure"],"imdb":8.4,"votes":"6,526","rtCrit":null,"rtAud":97,"tfp":null,"poster":"https://m.media-amazon.com/images/M/MV5BYzkxNzgzMTItNTRhOS00YWUxLTg1NzItOWQ3NjgzYjc3OTA1XkEyXkFqcGc@._V1_QL75_UY562_CR21,0,380,562_.jpg","plot":"To the casual eye, the amnesiac bounty hunter Wu Liuqi looks quite intimidating. With his deadly telekinetic scissor techniques and his ability to seamlessly transform into anything, one would not expect his modest demeanor. In fact, Wu is quite terrible at his job.","seasons":"5","country":"China","tier":"8.0–8.4","why":"Assassin comedy with surprising depth.","notes":"TV-MA. Stylized violence, comedy.","imdbUrl":"https://www.imdb.com/title/tt10384610/","rtUrl":"https://www.rottentomatoes.com/tv/scissor_seven"},{"id":"tt17050076","cat":"anim","catLabel":"Animation","title":"Swallowed Star","year":"2020–","rated":"N/A","runtime":"N/A","genres":["Animation","Action","Adventure"],"imdb":8.3,"votes":"1,066","rtCrit":null,"rtAud":null,"tfp":null,"poster":"https://m.media-amazon.com/images/M/MV5BMTZlYzAzYzctMjgyYi00ZjliLTllZTYtODUwODUzMjMyYzhmXkEyXkFqcGc@._V1_QL75_UX380_CR0,4,380,562_.jpg","plot":"The show follows the story of Luo Feng, a recently graduated high-schooler who wishes to become a warrior in their calamity-ridden world. Their world has been hit by a virus known as RR virus that kills humans and turns other living forms into violently mutated creatures.","seasons":"2","country":"China","tier":"8.0–8.4","why":"Sci-fi cultivation; monster progression.","notes":"Monster violence; 3D animation.","imdbUrl":"https://www.imdb.com/title/tt17050076/","rtUrl":null},{"id":"tt13375866","cat":"anim","catLabel":"Animation","title":"Heaven Official's Blessing","year":"2020–","rated":"TV-14","runtime":"N/A","genres":["Animation","Action","Adventure"],"imdb":8.2,"votes":"4,346","rtCrit":null,"rtAud":null,"tfp":null,"poster":"https://m.media-amazon.com/images/M/MV5BOWJlOTFlYjMtMzNiYS00MmZiLTk2MjktZTdjZmMzMmI2ODI5XkEyXkFqcGc@._V1_QL75_UY562_CR8,0,380,562_.jpg","plot":"Eight hundred years ago, Xie Lian was the Crown Prince of the Xian Le kingdom. He was loved by his citizens and was considered the darling of the world. He ascended to the Heavens at a young age; however, due to unfortunate circumstances, was quickly banished back to the mortal realm.","seasons":"2","country":"China","tier":"8.0–8.4","why":"Mythic supernatural mystery; 2 seasons.","notes":"TV-14. Supernatural violence, romance subplot.","imdbUrl":"https://www.imdb.com/title/tt13375866/","rtUrl":null},{"id":"tt11126994","cat":"anim","catLabel":"Animation","title":"Arcane","year":"2021–2024","rated":"TV-14","runtime":"N/A","genres":["Animation","Action","Adventure"],"imdb":9.0,"votes":"458,667","rtCrit":100,"rtAud":87,"tfp":9.4,"poster":"https://m.media-amazon.com/images/M/MV5BYjA2NzhlMDItNWRmZC00MzRjLWE3ZjAtZjBlZDAwOWY2ODdjXkEyXkFqcGc@._V1_QL75_UX380_CR0,0,380,562_.jpg","plot":"The delicate balance between the rich city of Piltover and the seedy underbelly of Zaun. Tensions between these city-states boil over with the creation of \"hextech\", a way for any person to control magical energy in Piltover, and in Zaun, a new drug called \"shimmer\" transforms humans into monsters.","seasons":"2","country":"United States, France","tier":"8.5+","why":"Fortiche art, class war, perfect pacing.","notes":"TV-14. Class violence, tragedy, stunning art.","imdbUrl":"https://www.imdb.com/title/tt11126994/","rtUrl":"https://www.rottentomatoes.com/tv/arcane"},{"id":"tt21056886","cat":"anim","catLabel":"Animation","title":"Scavengers Reign","year":"2023","rated":"TV-MA","runtime":"N/A","genres":["Animation","Adventure","Drama"],"imdb":8.6,"votes":"37,888","rtCrit":100,"rtAud":96,"tfp":8.9,"poster":"https://m.media-amazon.com/images/M/MV5BZmEyOWU1YjctNjgxNS00MTcyLTk3NDgtZmY3ZjBkY2RkN2YxXkEyXkFqcGc@._V1_QL75_UX380_CR0,4,380,562_.jpg","plot":"Created by Joseph Bennett and Charles Huettner, the remaining crew of a damaged interstellar freighter ship find themselves stranded on a beautiful, yet unforgiving alien planet where they must survive long enough to escape or be rescued.","seasons":"1","country":"United States","tier":"8.5+","why":"Alien ecology; psychedelic survival.","notes":"TV-MA. Body horror, peril, psychedelic.","imdbUrl":"https://www.imdb.com/title/tt21056886/","rtUrl":"https://www.rottentomatoes.com/tv/scavengers_reign"},{"id":"tt11680642","cat":"anim","catLabel":"Animation","title":"Pantheon","year":"2022–2023","rated":"TV-14","runtime":"N/A","genres":["Animation","Action","Adventure"],"imdb":8.5,"votes":"24,128","rtCrit":100,"rtAud":94,"tfp":null,"poster":"https://m.media-amazon.com/images/M/MV5BNGM2NjRjMzAtZjY5Ni00MWVkLWJlMTQtMWVmOWE1N2M2ZWM0XkEyXkFqcGc@._V1_QL75_UX380_CR0,4,380,562_.jpg","plot":"In 2001, genius visionary Stephen Holstrom and founder of Logorhythms, a technological corporation, speaks about his mission to reach digital immortality with the advancement of \"Uploaded Intelligence\" or \"UI,\" - scanning the human brain and uploading it on the Cloud.","seasons":"2","country":"United States","tier":"8.5+","why":"Uploaded minds; smart cyberpunk.","notes":"TV-14. Cyberviolence, existential themes.","imdbUrl":"https://www.imdb.com/title/tt11680642/","rtUrl":"https://www.rottentomatoes.com/tv/pantheon"},{"id":"tt28093628","cat":"anim","catLabel":"Animation","title":"Common Side Effects","year":"2024–","rated":"TV-MA","runtime":"N/A","genres":["Animation","Comedy","Drama"],"imdb":8.5,"votes":"22,354","rtCrit":null,"rtAud":null,"tfp":null,"poster":"https://m.media-amazon.com/images/M/MV5BNDMwOTFhMTUtYTYwOS00NDQwLTk1YTAtN2E2MzdiMWNkOWQ5XkEyXkFqcGc@._V1_QL75_UY562_CR24,0,380,562_.jpg","plot":"Two former classmates uncover a sinister conspiracy to destroy a mushroom that can cure all the world's diseases.","seasons":"2","country":"United States","tier":"8.5+","why":"Conspiracy thriller, adult animation.","notes":"TV-MA. Conspiracy, violence, drug themes.","imdbUrl":"https://www.imdb.com/title/tt28093628/","rtUrl":null},{"id":"tt16026746","cat":"anim","catLabel":"Animation","title":"X-Men '97","year":"2024–","rated":"TV-14","runtime":"N/A","genres":["Animation","Action","Adventure"],"imdb":8.7,"votes":"60,505","rtCrit":null,"rtAud":null,"tfp":9.0,"poster":"https://m.media-amazon.com/images/M/MV5BZDE0Zjk5OGYtZTk3OC00ZDZhLWE2NGQtNzc3NmJhNjljYzY5XkEyXkFqcGc@._V1_QL75_UY562_CR35,0,380,562_.jpg","plot":"A band of mutants use their uncanny gifts to protect a world that hates and fears them; they're challenged like never before, forced to face a dangerous and unexpected new future.","seasons":"3","country":"United States, South Korea","tier":"8.5+","why":"Kids' cartoon with adult consequences.","notes":"TV-14. Animated violence, genocide themes.","imdbUrl":"https://www.imdb.com/title/tt16026746/","rtUrl":null},{"id":"tt6741278","cat":"anim","catLabel":"Animation","title":"Invincible","year":"2021–","rated":"TV-MA","runtime":"N/A","genres":["Animation","Action","Adventure"],"imdb":8.7,"votes":"354,434","rtCrit":99,"rtAud":91,"tfp":7.7,"poster":"https://m.media-amazon.com/images/M/MV5BZGM5MmM2ZDAtMzBjNS00NjMxLWE4ZTMtNzFjMWMxYzU2ZThjXkEyXkFqcGc@._V1_QL75_UY562_CR35,0,380,562_.jpg","plot":"The son of Earth's most powerful superhero is about to become something greater than himself: something bold, something universal, something - Invincible. From the comics to the screen, Invincible follows Mark Grayson's journey of becoming Earth's next great defender after his father, Nolan Grayson: also known as Omni-Man.","seasons":"5","country":"United States","tier":"8.5+","why":"Superhero deconstruction, extreme gore.","notes":"TV-MA. Extreme graphic violence, gore.","imdbUrl":"https://www.imdb.com/title/tt6741278/","rtUrl":"https://www.rottentomatoes.com/tv/invincible"},{"id":"tt11247158","cat":"anim","catLabel":"Animation","title":"The Legend of Vox Machina","year":"2022–","rated":"TV-MA","runtime":"N/A","genres":["Animation","Action","Adventure"],"imdb":8.4,"votes":"57,106","rtCrit":100,"rtAud":93,"tfp":9.4,"poster":"https://m.media-amazon.com/images/M/MV5BMjI0ZjE2NDgtM2IxMy00NTk3LWFhMTEtMWNhOWJiYjIzYzY2XkEyXkFqcGc@._V1_QL75_UX380_CR0,0,380,562_.jpg","plot":"They're rowdy, they're ragtag, they're misfits turned mercenaries for hire. Vox Machina is more interested in easy money and cheap ale than actually protecting the realm. But when the kingdom is threatened by evil, this boisterous crew realizes that they are the only ones capable of restoring justice.","seasons":"4","country":"United States","tier":"8.0–8.4","why":"D&D party comedy and gore.","notes":"TV-MA. Graphic fantasy violence, sexual humor.","imdbUrl":"https://www.imdb.com/title/tt11247158/","rtUrl":"https://www.rottentomatoes.com/tv/the_legend_of_vox_machina"}]</script>
+<script>
+(function(){
+  const DATA = JSON.parse(document.getElementById('catalog').textContent);
+  const $ = s => document.querySelector(s);
+  const grid = $('#grid'), empty = $('#empty');
+  const state = {cat:'all', tier:'all', genre:'all', sort:'imdb', q:''};
+
+  const fmtTier = t => t;
+  const esc = s => String(s == null ? '' : s);
+
+  const genreSet = new Set();
+  DATA.forEach(d => d.genres.forEach(g => genreSet.add(g)));
+  const gsel = $('#genre');
+  [...genreSet].sort().forEach(g => {
+    const o = document.createElement('option'); o.value = g; o.textContent = g; gsel.appendChild(o);
+  });
+
+  const avg = (arr) => { const v = arr.filter(x => typeof x === 'number'); return v.length ? (v.reduce((a,b)=>a+b,0)/v.length) : 0; };
+
+  function imdbOf(d){ return d.imdb == null ? 0 : d.imdb; }
+  function rtOf(d){ return d.rtCrit == null ? -1 : d.rtCrit; }
+  function audOf(d){ return d.rtAud == null ? -1 : d.rtAud; }
+
+  function render(){
+    const q = state.q.trim().toLowerCase();
+    let list = DATA.filter(d => {
+      if (state.cat !== 'all' && d.cat !== state.cat) return false;
+      if (state.genre !== 'all' && !d.genres.includes(state.genre)) return false;
+      if (state.tier !== 'all' && imdbOf(d) < parseFloat(state.tier)) return false;
+      if (q){
+        const hay = (d.title + ' ' + d.genres.join(' ') + ' ' + (d.why||'') + ' ' + (d.plot||'') + ' ' + d.year).toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+    const cmp = {
+      imdb: (a,b)=> imdbOf(b)-imdbOf(a) || audOf(b)-audOf(a),
+      rt: (a,b)=> rtOf(b)-rtOf(a) || imdbOf(b)-imdbOf(a),
+      aud: (a,b)=> audOf(b)-audOf(a) || imdbOf(b)-imdbOf(a),
+      year: (a,b)=> (parseInt(b.year)||0)-(parseInt(a.year)||0),
+      title: (a,b)=> a.title.localeCompare(b.title)
+    }[state.sort];
+    list.sort(cmp);
+
+    grid.innerHTML = '';
+    const frag = document.createDocumentFragment();
+    list.forEach(d => {
+      const card = document.createElement('button');
+      card.className = 'card';
+      card.type = 'button';
+      card.setAttribute('aria-label', d.title + ' details');
+
+      const thumb = document.createElement('div');
+      thumb.className = 'thumb';
+      if (d.poster){
+        const img = document.createElement('img');
+        img.loading = 'lazy'; img.decoding = 'async'; img.alt = d.title; img.src = d.poster;
+        img.onerror = () => { img.style.display = 'none'; const ph = document.createElement('div'); ph.className='ph'; ph.textContent = d.title; thumb.appendChild(ph); };
+        thumb.appendChild(img);
+      } else {
+        const ph = document.createElement('div'); ph.className = 'ph'; ph.textContent = d.title; thumb.appendChild(ph);
+      }
+      const bt = document.createElement('span'); bt.className = 'badge-type'; bt.textContent = d.catLabel; thumb.appendChild(bt);
+      if (d.imdb != null){ const bs = document.createElement('span'); bs.className = 'badge-score'; bs.textContent = d.imdb.toFixed(1); thumb.appendChild(bs); }
+      card.appendChild(thumb);
+
+      const body = document.createElement('div'); body.className = 'card-body';
+      const h = document.createElement('div'); h.className = 'card-title'; h.textContent = d.title; body.appendChild(h);
+      const sub = document.createElement('div'); sub.className = 'card-sub';
+      sub.textContent = (d.year || '') + (d.runtime && d.runtime !== 'N/A' ? ' · ' + d.runtime : '');
+      body.appendChild(sub);
+
+      const mini = document.createElement('div'); mini.className = 'mini';
+      if (d.imdb != null){ const p = document.createElement('span'); p.className='pill imdb'; p.textContent = 'IMDb ' + d.imdb.toFixed(1); mini.appendChild(p); }
+      if (d.rtCrit != null){ const p = document.createElement('span'); p.className='pill rt'; p.textContent = 'RT ' + d.rtCrit + '%'; mini.appendChild(p); }
+      if (d.tfp != null){ const p = document.createElement('span'); p.className='pill'; p.textContent = 'TFP ' + d.tfp.toFixed(1); mini.appendChild(p); }
+      body.appendChild(mini);
+      card.appendChild(body);
+
+      card.addEventListener('click', () => open(d));
+      frag.appendChild(card);
+    });
+    grid.appendChild(frag);
+    empty.hidden = list.length !== 0;
+    $('#count').textContent = list.length + ' of ' + DATA.length + ' titles';
+    const filtered = state.cat !== 'all' || state.tier !== 'all' || state.genre !== 'all' || q;
+    $('#reset').hidden = !filtered;
+
+    $('#statTotal').textContent = DATA.length;
+    $('#statImdb').textContent = avg(DATA.map(d=>d.imdb)).toFixed(1);
+    $('#statRt').textContent = DATA.filter(d=>d.rtCrit != null || d.rtAud != null).length;
+  }
+
+  function open(d){
+    const ov = $('#overlay'), sh = $('#sheet');
+    sh.innerHTML = '';
+    const wrap = document.createElement('div'); wrap.className = 'sheet-grid';
+
+    const poster = document.createElement('div'); poster.className = 'sheet-poster';
+    if (d.poster){ const im = document.createElement('img'); im.src = d.poster; im.alt = d.title; poster.appendChild(im); }
+    else { const ph = document.createElement('div'); ph.className='ph'; ph.textContent = d.title; poster.appendChild(ph); }
+    wrap.appendChild(poster);
+
+    const b = document.createElement('div'); b.className = 'sheet-body';
+    const kick = document.createElement('div'); kick.className = 'kicker'; kick.textContent = d.catLabel + ' · ' + fmtTier(d.tier) + ' tier'; b.appendChild(kick);
+    const h2 = document.createElement('h2'); h2.id = 'sheetTitle'; h2.textContent = d.title; b.appendChild(h2);
+
+    const meta = document.createElement('div'); meta.className = 'meta';
+    meta.textContent = [d.year, d.rated && d.rated !== 'N/A' ? d.rated : null, d.runtime && d.runtime !== 'N/A' ? d.runtime : null,
+      d.seasons && d.seasons !== 'N/A' ? d.seasons + ' season' + (d.seasons === '1' ? '' : 's') : null,
+      d.country && d.country !== 'N/A' ? d.country : null].filter(Boolean).join(' · ');
+    b.appendChild(meta);
+
+    const scores = document.createElement('div'); scores.className = 'scores';
+    const mk = (cls,label,val) => { const el = document.createElement('div'); el.className = 'score ' + cls;
+      const v = document.createElement('div'); v.className='v'; v.textContent = val;
+      const l = document.createElement('div'); l.className='l'; l.textContent = label;
+      el.append(v,l); scores.appendChild(el); };
+    mk('imdb','IMDb', d.imdb != null ? d.imdb.toFixed(1) : '—');
+    mk('rt','RT critics', d.rtCrit != null ? d.rtCrit + '%' : '—');
+    mk('rt','RT audience', d.rtAud != null ? d.rtAud + '%' : '—');
+    mk('tfp','TFP site', d.tfp != null ? d.tfp.toFixed(1) : '—');
+    b.appendChild(scores);
+
+    if (d.genres.length){
+      const g = document.createElement('div'); g.className='genres';
+      d.genres.forEach(x => { const s = document.createElement('span'); s.className='genre'; s.textContent = x; g.appendChild(s); });
+      b.appendChild(g);
+    }
+
+    const ph3 = document.createElement('h3'); ph3.textContent = 'Synopsis'; b.appendChild(ph3);
+    const plot = document.createElement('p'); plot.className='plot'; plot.textContent = d.plot || 'No synopsis available.'; b.appendChild(plot);
+
+    if (d.why){ const h = document.createElement('h3'); h.textContent = 'Why it fits'; b.appendChild(h);
+      const p = document.createElement('p'); p.className='why'; p.textContent = d.why; b.appendChild(p); }
+
+    if (d.notes){ const h = document.createElement('h3'); h.textContent = 'Content notes'; b.appendChild(h);
+      const p = document.createElement('p'); p.className='notes'; p.textContent = d.notes; b.appendChild(p); }
+
+    const links = document.createElement('div'); links.className='links';
+    const a1 = document.createElement('a'); a1.className='btn primary'; a1.href=d.imdbUrl; a1.target='_blank'; a1.rel='noopener'; a1.textContent='IMDb page'; links.appendChild(a1);
+    if (d.rtUrl){ const a2 = document.createElement('a'); a2.className='btn'; a2.href=d.rtUrl; a2.target='_blank'; a2.rel='noopener'; a2.textContent='Rotten Tomatoes'; links.appendChild(a2); }
+    const a3 = document.createElement('a'); a3.className='btn'; a3.href='https://www.google.com/search?q=' + encodeURIComponent(d.title + ' ' + (d.year||'') + ' watch'); a3.target='_blank'; a3.rel='noopener'; a3.textContent='Where to watch'; links.appendChild(a3);
+    b.appendChild(links);
+
+    const note = document.createElement('div'); note.className='tfpnote';
+    note.textContent = 'TFP is the upload index’s own posted number — often stale or inflated. IMDb is the reference score; no download links are provided.';
+    b.appendChild(note);
+
+    wrap.appendChild(b);
+    sh.appendChild(wrap);
+    const close = document.createElement('button'); close.className='sheet-close'; close.type='button'; close.setAttribute('aria-label','Close'); close.textContent='×';
+    close.addEventListener('click', hide); sh.appendChild(close);
+    ov.classList.add('open'); document.body.style.overflow='hidden';
+    history.replaceState(null,'','#t='+d.id);
+    close.focus();
+  }
+  function hide(){ $('#overlay').classList.remove('open'); document.body.style.overflow=''; history.replaceState(null,'',location.pathname+location.search); }
+  $('#overlay').addEventListener('click', e => { if (e.target.id === 'overlay' || e.target.classList.contains('sheet')) hide(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') hide(); });
+
+  document.querySelectorAll('#tiers .chip').forEach(c => c.addEventListener('click', () => {
+    document.querySelectorAll('#tiers .chip').forEach(x => x.setAttribute('aria-pressed','false'));
+    c.setAttribute('aria-pressed','true'); state.tier = c.dataset.tier; render();
+  }));
+  document.querySelectorAll('.tabs button').forEach(t => t.addEventListener('click', () => {
+    document.querySelectorAll('.tabs button').forEach(x => x.setAttribute('aria-selected','false'));
+    t.setAttribute('aria-selected','true'); state.cat = t.dataset.cat; render();
+  }));
+  $('#genre').addEventListener('change', e => { state.genre = e.target.value; render(); });
+  $('#sort').addEventListener('change', e => { state.sort = e.target.value; render(); });
+  $('#q').addEventListener('input', e => { state.q = e.target.value; render(); });
+  $('#reset').addEventListener('click', () => {
+    state.cat='all'; state.tier='all'; state.genre='all'; state.q=''; $('#q').value=''; $('#genre').value='all';
+    document.querySelectorAll('.tabs button').forEach(x => x.setAttribute('aria-selected', x.dataset.cat === 'all'));
+    document.querySelectorAll('#tiers .chip').forEach(x => x.setAttribute('aria-pressed', x.dataset.tier === 'all'));
+    render();
+  });
+
+  render();
+  const deep = (location.hash.match(/^#t=(tt\d+)$/)||[])[1];
+  if (deep){ const d = DATA.find(x=>x.id===deep); if (d) open(d); }
+})();
+</script>
+</body>
+</html>
